@@ -1,0 +1,37 @@
+/*
+Program: LargerValue
+Author: Mel Richards
+Created Date: 02262017
+Updated Date: 02262017
+Description: This program takes two trip object values and compares them to find the large of the two. This program uses templates as an example of how different data types can be compared with a template.
+*/
+
+#include <iostream>
+#pragma once
+
+using namespace std;
+
+//Create the Trip class to hold the length variable and overloaded '>' operator function. 
+class Trip
+{
+public:
+	int length;
+	Trip operator>(Trip trip);
+	Trip();
+	~Trip();
+};
+
+//Create the overloaded operator function. This will compare two trip objects and return the larger of the two objects. 
+Trip Trip::operator>(Trip trip)
+{
+	Trip biggerTrip;
+	biggerTrip.length = trip.length > trip.length;
+	return biggerTrip;
+}
+
+//Create the template to compare other values and return the larger of the two values. 
+template <class T>
+T findLargerValue(T value1, T value2)
+{
+	return value1 > value2;
+}
