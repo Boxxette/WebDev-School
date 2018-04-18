@@ -1,0 +1,89 @@
+/*
+Program: StructProgram
+Author: Mel Richards
+Created Date: 03.12.2017
+Updated Date: 03.12.2017
+Description: This program creates a structure that holds student names and grades. The program displays the name and grades to the screen in order of name. It calculates and displays the highest and lowest grade and displays those to the screen. 
+*/
+
+//Include the heaer files needed for the program. Adding 'using std::' for the variables in <list> that are being used. 
+#include "stdafx.h"
+#include <iostream>
+using namespace std;
+#include <list>
+using std::cout;
+using std::endl;
+using std::list;
+#include <string>
+
+//Create the structure to hold the student information. This includes name for student name and grade for student grade. An overloaded < operator is included to compare student info elements. 
+struct StudentInfo
+{
+	string name;
+	int grade;
+	StudentInfo() {}
+	bool operator< (const StudentInfo& info) const { return name < info.name; }
+} student;
+
+//Declare the populateStudentRecord function to populate the studentList with information. 
+void populateStudentRecord(list<StudentInfo>& studentList, StudentInfo& student);
+
+//Create the populateStudentRecord function to populate information into the student record. For each student object created, add it to the list. 
+void populateStudentRecord(list<StudentInfo>& studentList, StudentInfo& student)
+{
+	student.name = "Jen Thompson";
+	student.grade = 98;
+	studentList.push_back(student);
+
+	student.name = "Bob Jones";
+	student.grade = 74;
+	studentList.push_back(student);
+
+	student.name = "Kraig Smith";
+	student.grade = 87;
+	studentList.push_back(student);
+}
+
+int main()
+{
+	//Declare variables for max grade, min grade, and average grade. Create the studentList structure and structure iterator. 
+	int max = 0, min = 100, avg = 0;
+	list<StudentInfo> studentList;
+	list<StudentInfo>::iterator it;
+
+	//Call populate student record to fill the list with students
+	populateStudentRecord(studentList, student);
+
+	//Sort the list by name
+	studentList.sort();
+
+	//Display the names to the screen for the user. As the loop iterates, it calculate max and min. It also keeps a running total of the grades so the average can be found once the loop is done iterating.
+	cout << "\t\t\tStudents\r\n";
+	cout << "\nName - Grade\r\n";
+	for (it = studentList.begin(); it != studentList.end(); it++)
+	{
+		cout << it->name << " - " << it->grade << "\r\n";
+		if (it->grade > max)
+		{
+			max = it->grade;
+		}
+		if (it->grade < min)
+		{
+			min = it->grade;
+		}
+		avg += it->grade;
+	}
+
+	//Divide average by 3 to get the final average score. 
+	avg = avg / 3;
+
+	//Display the min, max, and avg. 
+	cout << "\n\t\t\t Grade Information\r\n";
+	cout << "Minimum Grade: " << min << "\r\n";
+	cout << "Maximum Grade: " << max << "\r\n";
+	cout << "Average Grade: " << avg << "\r\n";
+	
+	system("pause");
+	
+    return 0;
+}
