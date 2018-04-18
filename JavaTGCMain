@@ -1,0 +1,466 @@
+/*
+   Program: TGCAnticipatedTravel
+   Author: Mel Richards
+   Create Date: 11.27.2016
+   Date Updated: 12.10.2016
+   Purpose: This class creates the main screen of the program and allowes a user to enter several variables to calculate their travel costs.
+*/
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.*;
+import java.io.*;
+import java.util.*;
+
+
+public class TGCAnticipatedTravel extends Frame implements ActionListener,ItemListener
+{
+	String vehicleType[] = {"Custom","Compact","Mid-Size","Luxury","SUV"};
+	String gasKind[] = {"Custom","Super Unleaded","Unleaded","Leaded","Diesel"};
+	String locations[] = {"Custom","New York City, NY","Los Angeles, CA","Chicago, IL","Houston, TX","Seattle, WA","Orlando, FL"};
+	final int SIZE = 4;
+	DataOutputStream output;
+
+	//Construct the JPanels for user input and the user option buttons
+	//Construct the info panel that tells the user what to do.
+	JPanel infoPanel = new JPanel();
+		JLabel description = new JLabel("Enter the information for your trip below. We'll tell you the total cost.");
+
+	//Construct the Input panel that takes the user's input.
+	JPanel inputPanel = new JPanel();
+
+		//Contruct the location panel. This will be the north section of the Info panel and it will hold panels a & c which get the start & end locations and total miles for the trip.
+		JPanel locationPanel = new JPanel();
+			JPanel aInput = new JPanel();
+				JLabel beginLabel = new JLabel("Choose your starting location:");
+				JComboBox beginLocation = new JComboBox(locations);
+				JLabel endLabel = new JLabel("Choose your destination:");
+				JComboBox endLocation = new JComboBox(locations);
+			JPanel cInput = new JPanel();
+				JLabel approxMilesLabel = new JLabel("Add or update the miles for this trip:");
+				JTextField approxMiles = new JTextField(6);
+
+		//Construct the vehicle panel. This panel takes the center position of the inputPanel and will hold panels d & e which obtain the vehicle type and the vehicle's miles per gallon.
+		JPanel vehiclePanel = new JPanel();
+			JPanel dInput = new JPanel();
+				JLabel vehicleLabel = new JLabel("Choose your vehicle type:");
+				JComboBox vehicleSize = new JComboBox(vehicleType);
+			JPanel eInput = new JPanel();
+				JLabel mpgLabel = new JLabel("Add or update your vehicle's MPG:");
+				JTextField mpgInput = new JTextField (3);
+
+		//Construct the gasPanel. Thi is the Southern panel of the inputPanel. It holds panels f & g whoch collects the gas type and cost per gallon of gas.
+		JPanel gasPanel =  new JPanel();
+			JPanel fInput = new JPanel();
+				JLabel gasLabel = new JLabel("Choose your gas type:");
+				JComboBox gasType = new JComboBox(gasKind);
+			JPanel gInput = new JPanel();
+				JLabel gasCostLabel = new JLabel("Add or update the price per gallon of gas:");
+				JTextField gasCostGallon = new JTextField(5);
+
+	//Construct the button panel that holds the buttons for the program.
+	JPanel buttonPanel = new JPanel();
+		JButton submit = new JButton ("Submit");
+		JButton clear = new JButton("Clear");
+
+	//Construct the main window of the program
+	public TGCAnticipatedTravel()
+	{
+		//Set layout for the frame and panels above. The overall Layout of the inputPanel is a BorderLayout.
+		this.setLayout(new BorderLayout());
+			//Intems in the infoPanel are in a FlowLayout.
+			infoPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+			//Items in the inputPanel are in a BorderLayout.
+			inputPanel.setLayout(new GridLayout(3,1));
+				//Items in the locationPanel are in a BorderLayout. The a & c panels have a FlowLayout.
+				locationPanel.setLayout(new BorderLayout());
+					aInput.setLayout(new FlowLayout(FlowLayout.LEFT));
+					cInput.setLayout(new FlowLayout(FlowLayout.LEFT));
+				//Items in the vehiclePanel are in a BorderLayout. The d & e panels have a FlowLayout.
+				vehiclePanel.setLayout(new BorderLayout());
+					dInput.setLayout(new FlowLayout(FlowLayout.LEFT));
+					eInput.setLayout(new FlowLayout(FlowLayout.LEFT));
+				//Items in the gasPanel are in a BorderLayout. The f & g panels have a FlowLayout.
+				gasPanel.setLayout(new BorderLayout());
+					fInput.setLayout(new FlowLayout(FlowLayout.LEFT));
+					gInput.setLayout(new FlowLayout(FlowLayout.LEFT));
+			//Items in the button panel have a FlowLayout.
+			buttonPanel.setLayout(new FlowLayout());
+
+		//Add description to the infoPanel to tell the user what this portion of the program does.
+		infoPanel.add(description);
+
+		//Setup the locationPanel by adding the necessary panels a & c. Setup each panel with labels, text options, and drop downs. Then add locationPanel to the inputPanel.
+		//Setup aInput Panel. This is the Northern panel of the locationPanel and it displays the beginLabel and obtains beginLocation. It also displays the endLabel and obtains endLocation.Add it to the locationPanel.
+		aInput.add(beginLabel);
+		aInput.add(beginLocation);
+		beginLocation.addItemListener(this);
+		locationPanel.add(aInput, BorderLayout.NORTH);
+		aInput.add(endLabel);
+		aInput.add(endLocation);
+		endLocation.addItemListener(this);
+		//Setup cInput Panel. This is the Southern panel of the locationPanel and it displays the approxMilesLabel and obtains approxMiles. Add it to the locationPanel.
+		cInput.add(approxMilesLabel);
+		approxMiles.setText("0");
+		cInput.add(approxMiles);
+		locationPanel.add(cInput, BorderLayout.SOUTH);
+
+		inputPanel.add(locationPanel);
+
+		//Setup the vehiclePanel by adding the necessary panels d & e. Setup each panel with labels, text options, and drop downs. Then add vehiclePanel to the inputPanel.
+		//Setup dInput Panel. This is the Northern panel of the vehiclePanel and it displays the vehicleLabel and obtains vehicleSize. Add it to the vehiclePanel.
+		dInput.add(vehicleLabel);
+		dInput.add(vehicleSize);
+		vehicleSize.addItemListener(this);
+		vehiclePanel.add(dInput, BorderLayout.NORTH);
+		//Setup eInput Panel. This is the Southern panel of the vehiclePanel and it displays the mpgLabel and obtains mpgInput. Add it to the vehiclePanel.
+		eInput.add(mpgLabel);
+		mpgInput.setText("0");
+		eInput.add(mpgInput);
+		vehiclePanel.add(eInput, BorderLayout.SOUTH);
+
+		inputPanel.add(vehiclePanel);
+
+		//Setup the gasPanel by adding the necessary panels f & g. Setup each panel with labels, text options, and drop downs. Then add gasPanel to the inputPanel.
+		//Setup fInput Panel. This is the Northern panel of the gasPanel and it displays the gasLabel and obtains gasType. Add it to the gasPanel.
+		fInput.add(gasLabel);
+		fInput.add(gasType);
+		gasType.addItemListener(this);
+		gasPanel.add(fInput, BorderLayout.NORTH);
+		//Setup gInput Panel. This is the Southern panel of the gasPanel and it displays the gasCostLabel and obtains gasCostGallon. Add it to the gasPanel.
+		gInput.add(gasCostLabel);
+		gasCostGallon.setText("0.00");
+		gInput.add(gasCostGallon);
+		gasPanel.add(gInput, BorderLayout.SOUTH);
+
+		inputPanel.add(gasPanel);
+
+		//Create the buttonPanel. Add the button to calculate anticipated cost to and to clear all. Add ActionListener to button.
+		buttonPanel.add(submit);
+		submit.addActionListener(this);
+		buttonPanel.add(clear);
+		clear.addActionListener(this);
+
+		//Add the panels to the frame
+		add(infoPanel, BorderLayout.NORTH);
+		add(inputPanel, BorderLayout.CENTER);
+		add(buttonPanel, BorderLayout.SOUTH);
+
+		//The file name is created for saving the trip to a file.
+		String savedTrips = "Saved_Trips";
+		try
+		{
+			output = new DataOutputStream(new FileOutputStream(savedTrips));
+		}
+		catch (IOException io)
+		{
+			JOptionPane.showMessageDialog(null, "The file can't be created. Check your system and try again.","Error",JOptionPane.INFORMATION_MESSAGE);
+		}
+
+		//override the windowClosing event
+		addWindowListener(
+			new WindowAdapter()
+				{
+				public void windowClosing(WindowEvent e)
+					{
+					   System.exit(0);
+					}
+				}
+		);
+	}
+
+	//Construct antCalcs to calculate the total cost of the trip and number of oil changes. Display the cost for the user on the screen along with the number of oil changes needed.
+	//Save totalCost in case the user would like to
+	public double antCalcs(int miles, double gas, int mpg)
+	{
+		//Calculate the total cost of the trip based on price per gallon and anticipated miles. Add the cost of an oil change
+		//if applicable.
+		final int OILCHANG = 3000;
+
+		double totalGas;
+		totalGas = miles*1/mpg*gas;
+
+		double oilPrice = 30, totalCost, count;
+		int oilCount = miles/OILCHANG;
+
+		if(oilCount >= 1)
+		{
+			totalCost = (oilPrice*oilCount) + totalGas;
+		}
+		else
+		{
+			totalCost = totalGas;
+		}
+		NumberFormat formaT = NumberFormat.getCurrencyInstance();
+		JOptionPane.showMessageDialog(null,"Gas is going to cost you " + formaT.format(totalGas) + " total for this trip.\nYou will need your oil changed " + oilCount + " times on this trip.\nThe total cost for oil and gas will be " + formaT.format(totalCost),"Results",JOptionPane.INFORMATION_MESSAGE);
+
+		return totalCost;
+	}
+
+	public static void main(String[] args)
+	{
+		try
+		{
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(null, "The UIManager could not set the Look and Feel for this application.","Error", JOptionPane.INFORMATION_MESSAGE);
+		}
+
+		//Run SplashScreen
+		NewTGCSplash ntgc = new NewTGCSplash();
+		ntgc.setTitle("Travelor's Gasoline Calculator (TGC)");
+		ntgc.setBounds(200,200,600,300);
+		ntgc.setVisible(true);
+	    ntgc.setBackground(Color.white);
+
+	    try
+		{
+			Thread.sleep(3000);
+		}
+		catch (InterruptedException i)
+		{
+		}
+		ntgc.dispose();
+
+		//Create the frame
+		TGCAnticipatedTravel w = new TGCAnticipatedTravel();
+		w.setTitle("Travelor's Gasoline Calculator (TGC)");
+		w.setBounds(200,200,675,300);
+	    w.setVisible(true);
+	    w.setBackground(Color.white);
+
+	}
+
+	public void actionPerformed(ActionEvent e)
+	{
+		//setup the action so that the antCalc segment runs when the "Submit" button is selected")
+		String arg = e.getActionCommand();
+
+		//Create gas and miles variables for the conversion of the user input values.
+		double gas = 0.00;
+		int miles = 0;
+		int mpg = 0;
+		String startDate = "00/00/0000";
+
+		if (arg == "Submit")
+		{
+			String gasText = gasCostGallon.getText();
+			gas = Double.parseDouble(gasText);
+			String milesText = approxMiles.getText();
+			miles = Integer.parseInt(milesText);
+			String mpgText = mpgInput.getText();
+			mpg = Integer.parseInt(mpgText);
+
+			double cost = antCalcs(miles, gas, mpg);
+			int saveOption = JOptionPane.showConfirmDialog(null,"Would you like to save the details for this trip?","Save",JOptionPane.YES_NO_OPTION);
+			if (saveOption == JOptionPane.YES_OPTION)
+			{
+				int startLocal = beginLocation.getSelectedIndex();
+				int endLocal = endLocation.getSelectedIndex();
+				startDate = JOptionPane.showInputDialog(null,"Enter the start date of this trip\n(Use MM/DD/YYYY format):", "Trip Date", JOptionPane.QUESTION_MESSAGE);
+				try
+				{
+					output.writeUTF(startDate);
+					output.writeUTF(locations[startLocal]);
+					output.writeUTF(locations[endLocal]);
+					output.writeUTF(approxMiles.getText());
+					output.writeDouble(cost);
+
+					JOptionPane.showMessageDialog(null,"The following information was saved for this trip:\n-Trip Start Date\n-Starting Location\n-Ending Location\n-Miles of Trip\n-Cost of Trip","Save Successful",JOptionPane.INFORMATION_MESSAGE);
+
+				}
+				catch (IOException m)
+				{
+					JOptionPane.showMessageDialog(null,"The information could not be saved.", "Error", JOptionPane.WARNING_MESSAGE);
+				}
+			}
+
+			clearFields();
+		}
+		else if (arg == "Clear")
+		{
+			clearFields();
+		}
+	}
+
+	void clearFields()
+	{
+		beginLocation.setSelectedItem("Custom");
+		endLocation.setSelectedItem("Custom");
+		vehicleSize.setSelectedItem("Custom");
+		mpgInput.setText("0");
+		approxMiles.setText("0");
+		gasType.setSelectedItem("Custom");
+		gasCostGallon.setText("0.00");
+	}
+
+	public void itemStateChanged(ItemEvent choice)
+	{
+		//Get the decision that was made and update the appropriate values on the screen
+		Object changeMade = choice.getItemSelectable();
+
+		//Determine which values need to be updated based on the item that was changed.
+		if	(changeMade == this.beginLocation || changeMade == this.endLocation)
+		{
+			//Setup begin and end to determine what the current begining and end travel locations are.
+			Object begin = beginLocation.getSelectedItem();
+			Object end = endLocation.getSelectedItem();
+
+			//If a location other than 'Custom' is selected for both the begining and end location, the approxMiles is updated for the user.
+			if	(begin != "Custom" && end != "Custom")
+			{
+				//New York to LA -OR- LA to New York
+				if	(begin == "New York City, NY" && end == "Los Angeles, CA" || begin == "Los Angeles, CA" ||  end == "New York City, NY")
+				{
+					approxMiles.setText("2777");
+				}
+				//New York to Chicago -OR- Chicago to New York
+				if	(begin == "New York City, NY" && end == "Chicago, IL" || begin == "Chicago, IL" && end == "New York City, NY")
+				{
+					approxMiles.setText("789");
+				}
+				//New York to Houston -OR- Houston to New York
+				if	(begin == "New York City, NY" &&  end == "Houston, TX" || begin == "Houston, TX" && end == "New York City, NY")
+				{
+				approxMiles.setText("1628");
+				}
+				//New York to Seattle -OR- Seattle to New York
+				if	(begin == "New York City, NY" && end == "Seattle, WA" || begin == "Seattle, WA" && end == "New York City, NY")
+				{
+					approxMiles.setText("2858");
+				}
+				//New York to Orlando -OR- Orlando to New York
+				if	(begin == "New York City, NY" && end == "Orlando, FL" || begin == "Orlando, FL" && end == "New York City, NY")
+				{
+					approxMiles.setText("1083");
+				}
+				//New York to New York
+				if	(begin == "New York City, NY" && end == "New York City, NY" )
+				{
+					approxMiles.setText("0");
+				}
+				//LA to Chicago -OR- Chicago to LA
+				if	(begin == "Los Angeles, CA" && end == "Chicago, IL" || begin == "Chicago, IL" &&  end == "Los Angeles, CA")
+				{
+					approxMiles.setText("2016");
+				}
+				//LA to Houston -OR- Houston to LA
+				if	(begin == "Los Angeles, CA" && end == "Houston, TX" || begin == "Houston, TX" && end == "Los Angeles, CA")
+				{
+					approxMiles.setText("1548");
+				}
+				//LA to Seattle -OR- Seattle to LA
+				if	(begin == "Los Angeles, CA" && end == "Seattle, WA" || begin == "Seattle, WA" && end == "Los Angeles, CA")
+				{
+					approxMiles.setText("1135");
+				}
+				//LA to Orlando -OR- Orlando to LA
+				if	(begin == "Los Angeles, CA" && end == "Orlando, FL" || begin == "Orlando, FL" && end == "Los Angeles, CA")
+				{
+					approxMiles.setText("2512");
+				}
+				//LA to LA
+				if	(begin == "Los Angeles, CA" && end == "Los Angeles, CA")
+				{
+					approxMiles.setText("0");
+				}
+				//Chicago to Houston -OR- Houston to Chicago
+				if	(begin == "Chicago, IL" && end == "Houston, TX" || begin == "Houston, TX" && end == "Chicago, IL")
+				{
+					approxMiles.setText("1083");
+				}
+				//Chicago to Seattle -OR- Seattle to Chicago
+				if	(begin == "Chicago, IL" && end == "Seattle, WA" || begin == "Seattle, WA" && end == "Chicago, IL")
+				{
+					approxMiles.setText("2068");
+				}
+				//Chicago to Orlando -OR- Orlando to Chicago
+				if	(begin == "Chicago, IL" && end == "Orlando, FL" || begin == "Orlando, FL" && end == "Chicago, IL")
+				{
+					approxMiles.setText("1160");
+				}
+				//Chicago to Chicago
+				if	(begin == "Chicago, IL" && end == "Chicago, IL")
+				{
+					approxMiles.setText("0");
+				}
+				//Houston to Seattle -OR- Seattle to Houston
+				if	(begin == "Houston, TX" && end == "Seattle, WA" || begin == "Seattle, WA" && end == "Houston, TX")
+				{
+					approxMiles.setText("2343");
+				}
+				//Houston to Orlando -OR- Orlando to Houston
+				if	(begin == "Houston, TX" && end == "Orlando, FL" || begin == "Orlando, FL" && end == "Houston, TX")
+				{
+					approxMiles.setText("966");
+				}
+				//Houston to  Houston
+				if	(begin == "Houston, TX" && end == "Houston, TX")
+				{
+					approxMiles.setText("0");
+				}
+				//Seattle to Orlando -OR- Orlando to Seattle
+				if	(begin == "Seattle, WA" && end == "Orlando, FL" || begin == "Orlando, FL" && end == "Seattle, WA")
+				{
+					approxMiles.setText("3076");
+				}
+				//Seattle to Seattle
+				if	(begin == "Seattle, WA" && end == "Seattle, WA")
+				{
+					approxMiles.setText("0");
+				}
+				//Orlando to Orlando
+				if	(begin == "Orlando, FL" && end == "Orlando, FL")
+				{
+					approxMiles.setText("0");
+				}
+			}
+		}
+		else if	(changeMade == this.gasType)
+		{
+			//Setup gasChoice and update the gas choice based on the user's option.
+			Object gasChoice = gasType.getSelectedItem();
+
+			if (gasChoice != "Custom")
+			{
+				if (gasChoice == "Super Unleaded")
+				{
+					gasCostGallon.setText("3.00");
+				}
+				if (gasChoice == "Unleaded")
+				{
+					gasCostGallon.setText("2.90");
+				}
+				if (gasChoice == "Leaded")
+				{
+							gasCostGallon.setText("2.50");
+				}
+				if (gasChoice == "Diesel")
+				{
+					gasCostGallon.setText("4.00");
+				}
+			}
+			else
+			{
+				gasCostGallon.setText("0.00");
+			}
+		}
+		else if(changeMade == this.vehicleSize)
+		{
+			//Setup vehicleChoice and update the mpg based on the user's option.
+			Object vehicleChoice = vehicleSize.getSelectedItem();
+
+			if (vehicleChoice != "Custom")
+			{
+				mpgInput.setText("15");
+			}
+			else
+			{
+				mpgInput.setText("0");
+			}
+		}
+	}
