@@ -1,0 +1,72 @@
+/*
+	Program: LargerValue
+	Author: Mel Richards
+	Created Date: 02262017
+	Updated Date: 02262017
+	Description: This program takes two trip object values and compares them to find the large of the two. This program uses templates as an example of how different data types can be compared with a template.  
+*/
+
+#include <iostream>
+#include "stdafx.h"
+#include "Trip.h"
+
+using namespace std;
+
+int main()
+{
+
+	//Declare values to hold the int, object, and double values. 
+	int largerInt;
+	double largerDouble;
+	Trip largerTrip, myTrip, yourTrip;
+
+	//Give myTrip and yourTrip values. 
+	myTrip.length = 200;
+	yourTrip.length = 156;
+
+	//Use the template function to find and display the larger of the two values. 
+	largerInt = findLargerValue(3, 7);
+	cout << "Between 3 and 7, the larger int value is: ";
+	if (largerInt == 1)
+	{
+		cout << "3\r\n";
+	}
+	else
+	{
+		cout << "7\r\n";
+	}
+	largerDouble = findLargerValue(6.3, 4.2);
+	cout << "Betwee 6.3 and 4.2, the larger trip value is: ";
+	if (largerDouble == 1)
+	{
+		cout << "6.3\r\n";
+	}
+	else
+	{
+		cout << "4.2\r\n";
+	} 
+	largerTrip = findLargerValue(yourTrip, myTrip);
+	cout << "Between my trip (" << myTrip.length << ") and your trip (" << yourTrip.length << "), the longer trip is: ";
+	if (largerTrip.length == 1)
+	{
+		cout << yourTrip.length << "\r\n";
+	}
+	else
+	{
+		cout << myTrip.length << "\r\n";
+	}
+	system("pause");
+
+    return 0;
+}
+
+
+//The trip constructor.
+Trip::Trip()
+{
+}
+
+
+Trip::~Trip()
+{
+}
