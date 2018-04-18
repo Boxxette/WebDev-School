@@ -1,0 +1,753 @@
+/*
+Program: YahtzeeGame
+Author: Mel Richards
+Date Created: 11.20.2016
+Purpose: This is a fully functioning version of Yahtzee. 
+*/
+
+#include "stdafx.h"
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <cstdlib>
+#include <algorithm>
+using namespace std;
+
+/*Setup variables to b used in the determine score function. This includes an array for each player to store the score of the one's - six's combinations as well as a 1 (Used) 0 (Not Used)
+marker for the other dice score options. To further explain: for each array, playerNumber one - ten, each value in the array is dedicated to one scoring option from yahtzee.
+index 0 = 1's dice combo, index 1 = 2's dice combo, index 2 = 3's dice combo, index 3 = 4's die combo, index 4 = 5's dice combo, index 5 = 6's dice combo, index 6 = 3 of a Kind, index 7 = 4 of a Kind,
+index 8 = Full House, index 9 = Small Straight, index 10 = Large Straight, index 11 = YAHTZEE, index 12 = chance score. All indexes will hold the value scored by choosing one of the corresponding
+choice options. At the end of the game, indexes 0 - 5 will be added together to see if the user qualifies for the 35 bonus points awarded when the 'top' section of the scorecard is greater than 63.
+These arrays are global because there is no way that I know of to change the array being passed to a function so they have to be recognized by every function. 
+*/
+const int MAX = 10;
+const int POINTS = 13;
+const int DICE = 5;
+int playerOne[POINTS];
+int playerTwo[POINTS];
+int playerThree[POINTS];
+int playerFour[POINTS];
+int playerFive[POINTS];
+int playerSix[POINTS];
+int playerSeven[POINTS];
+int playerEight[POINTS];
+int playerNine[POINTS];
+int playerTen[POINTS];
+
+//The rollDice function rolls the dice in each game. NOTE: 0's in the dice value do not roll in the generator. 9's are used as non-rolled
+//filler values. 
+int rollDice(int dice[]);
+//The reviewDice function allowes the player to review dice and determine whether to re-roll them or take their score. 
+int reviewDice(int dice[], int saveDice[]);
+//The chooseDice function allows the player to determine which dice they want to roll again and which dice they want to keep.
+int chooseDice(int dice[], int saveDice[]);
+//The determineScore function allowes the player to determine thir score based on the dice rolled. 
+int determineScore(int dice[], int playerScore[], int playerNplay);
+//The finalRank function shows all the final scores of players ranked from highest to lowest. 
+int finalRank(string playerName[], int playerScore[], int numPlayers);
+
+int main()
+{
+	//Display the Yahtzee game welcome.  Give sites for game rules and printable scorecards. 
+	cout << "~~~~~~~~~~ Welcome to Yahtzee ~~~~~~~~~~\r\n";
+	cout << "\nFor game rules, visit \r\n";
+	cout << "http://www.hasbro.com/common/instruct/Yahtzee.pdf. \r\n";
+	cout << "For printable score cards, visit \r\n";
+	cout << "https://www.eecis.udel.edu/~davis/yahtzee.pdf. \r\n";
+	cout << "\nThank you for choosing to play Yahtzee!\r\n";
+
+	//Use a for loop to give the counters for the player score options -1 values. 
+	for (int d = 0; d < POINTS; d++)
+	{
+		playerOne[d] = -1;
+		playerTwo[d] = -1;
+		playerThree[d] = -1;
+		playerFour[d] = -1;
+		playerFive[d] = -1;
+		playerSix[d] = -1;
+		playerSeven[d] = -1;
+		playerEight[d] = -1;
+		playerNine[d] = -1;
+		playerTen[d] = -1;
+	}
+
+	//Start the do-while loop that runs games repeatedly. Declare the newGame variable that loops for multiple games as well as the arrays for playerName and playerScore. Declare the numPlayers variable. 
+	//Declare the arrays for the dice being rolled and dice being saved by user. Set the contsant DICE for the dice variables. Seed the random number generaror. 
+	char newGame = 'Y';
+	string playerName[MAX];
+	int playerScore[MAX];
+	int numPlayers = 0;
+	int dice[DICE];
+	int savedDice[DICE];
+	int rollNum = 0;
+	int playerNplay = 0;
+
+	srand(static_cast<unsigned int>(time(0)));
+
+	do
+	{
+		cout << "\n---------- Let's Get Started ----------\r\n";
+		//Add a do while loop to ask for the number of players until the number is less than 10 and greater than 0. 
+		do
+		{
+			cout << "How many players will you have?\r\n";
+			cout << "You are allowed up to 10 players per game.\r\n";
+			cout << "PLAYERS: ";
+			cin >> numPlayers;
+			if (numPlayers <= 0 || numPlayers > 10)
+			{
+				cout << "\n!!Invalid Number - You must enter a number 1 to 10!!\r\n";
+			}
+		} while (numPlayers <= 0 || numPlayers > 10);
+
+		//Use a for loop to get the names of the players in the game and set their scores to 0.
+		cout << "\n\n---------- Setup Players ----------\r\n";
+		for (int a = 0; a < numPlayers; a++)
+		{
+			cout << "\nEnter the name of player " << a + 1 << ": ";
+			getline(cin >> ws, playerName[a]);
+			playerScore[a] = 0;
+		}
+
+		//Use a for loop to count the number of rounds in the game. Loop through each player's turn each round. 		
+		for (int round = 0; round < 6; round++)
+		{
+			cout << "\n\n--------------- Round " << round + 1 << " ---------------\r\n";
+
+			//Another for loop moves through each player's turn during the gamerounds. 
+			for (int playER = 0; playER < numPlayers; playER++)
+			{
+				cout << "\n ---------- Start Turn Player " << playER + 1 << " ----------\r\n";
+				//Set the playerNplay variable equal to the player who is curently playing. 
+				playerNplay = playER;
+				
+				//The dice and save dice arrays are changed to 9 values at the begining of the turn with a for loop. The rollNumber variable is declared to keep track of the number of rolls.
+				for (int i = 0; i < DICE; i++)
+				{
+					dice[i] = 9;
+					savedDice[i] = 9;
+				}
+				//The while loop is used to count the number of times dice are rolled. The rollDice function is called to roll the dice for the player. The reviewDice function 
+				//is called so the player can review the dice they have rolled. 
+				rollNum = 0;
+				while (rollNum < 3)
+				{
+					cout << "\n ---------- Roll the Dice ---------- \r\n";
+					*dice = rollDice(dice);
+					*dice = reviewDice(dice, savedDice);
+					char option = 'N';
+					if (rollNum < 2)
+					{
+						//The while loop check is in place to ensure the player only selects 'R' or 'S'
+						while (option != 'R' && option != 'S')
+						{
+							cout << "\nIf you would like to re-roll any of your dice, enter 'R'.\r\n";
+							cout << "Select 'S' to save your dice and choose your score.\r\n";
+							cin >> option;
+							if (option != 'R' && option != 'S')
+							{
+								cout << "!!Invalid Entry - Please enter 'R' or 'S'!!\r\n";
+							}
+						}
+						if (option == 'R')
+						{
+							int choose = chooseDice(dice, savedDice);
+							rollNum++;
+						}
+						else if (option == 'S')
+						{
+							rollNum = 3;
+							*dice = reviewDice(dice, savedDice);
+						}
+					}
+					else
+					{
+						rollNum++;
+					}
+				}
+				cout << "\n ---------- Choose Your Score ----------\r\n";
+				*dice = determineScore(dice, playerScore, playerNplay);
+			}
+		}
+
+		int fR = finalRank(playerName, playerScore, numPlayers);
+
+		//Ask the player if they would like to play again. The player must enter 'y' or 'Y' to play another round. 
+		cout << "\nThank you for playing Yahtzee! Would you like to play again?\r\n";
+		cout << "Enter 'Y' to play again. Enter any other key to exit.\r\n";
+		cin >> newGame;
+		//Add an if statment so that when a new gameis played, the names and scores from before are wiped out. 
+		if (newGame == 'Y' || newGame == 'y')
+		{
+			for (int z = 0; z < MAX; z++)
+			{
+				playerName[z] = "";
+				playerScore[z] = 0;
+			}
+		}
+	} while (newGame == 'Y' || newGame == 'y');
+
+	return 0;
+}
+
+
+int rollDice(int dice[])
+{
+	//The For loop is used to move through each of the five dice. The if statment determines whether or not the die is re-rolled based on it's value. If a dice value is
+	//0 it is not rolled. Dice values 1 - 9 are randomly generated. 
+	for (int roll = 0; roll < DICE; roll++)
+	{
+		if (dice[roll] != 0)
+		{
+			dice[roll] = (rand() % 6) + 1;
+		}
+	}
+	return *dice;
+}
+
+int reviewDice(int dice[], int savedDice[])
+{
+	//The dice[] and savedDice[] values are displayed for the player with a for loop if the player has rolled less than twice on their turn. If a dice[] value = 0 from a prior roll, the saveDice 
+	//value is inserted and displayed to the player. The updated dice array is returned to the main function. 
+	cout << "The dice you have rolled are: \r\n";
+	for (int c = 0; c < DICE; c++)
+	{
+		if (dice[c] == 0)
+		{
+			dice[c] = savedDice[c];
+			savedDice[c] = 9;
+		}
+		cout << "Dice #" << c + 1 << ": " << dice[c] << "\r\n";
+	}
+	return *dice;
+}
+
+int chooseDice(int dice[], int savedDice[])
+{
+	//The for loop moves through each dice value so the player can determine which dice to keep and which to re-roll. 
+	for (int x = 0; x < DICE; x++)
+	{
+		cout << "\nDice #" << x + 1 << ": " << dice[x] << "\r\n";
+		cout << "Would you like to re-roll this dice? Enter 'R' to re-roll this dice. Enter 'S' \r\n";
+		cout << "to save the dice and move on.\r\n";
+		char reRoll = 'N';
+		cin >> reRoll;
+		//The while loop check is in place to ensure the player only selects 'R' or 'S'
+		while (reRoll != 'R' && reRoll != 'S')
+		{
+			cout << "I don't recognize your choice.\r\n";
+			cout << "The value of this dice is: " << dice[x] << " Please enter 'R' to re-roll this dice \r\n";
+			cout << "or 'S' to save the value and move on.\r\n";
+			cin >> reRoll;
+		}
+
+		if (reRoll == 'S')
+		{
+			savedDice[x] = dice[x];
+			dice[x] = 0;
+		}
+
+		else
+		{
+			savedDice[x] = 0;
+		}
+	}
+	return *dice;
+}
+
+int determineScore(int dice[], int playerScore[], int playerNplay)
+{
+	//Create a temporary array to use in obtaining the player's score. 
+	int tempArray[POINTS];
+
+	//Use a case structure to determine the appropriate player based on playerNplay and fill the tempArray with that player's information. 
+	switch (playerNplay)
+	{
+	case 0:
+		for (int one = 0; one < POINTS; one++)
+		{
+			tempArray[one] = playerOne[one];
+		}
+		break;
+	case 1:
+		for (int two = 0; two < POINTS; two++)
+		{
+			tempArray[two] = playerTwo[two];
+		}
+		break;
+	case 2:
+		for (int three = 0; three < POINTS; three++)
+		{
+			tempArray[three] = playerThree[three];
+		}
+		break;
+	case 3:
+		for (int four = 0; four < POINTS; four++)
+		{
+			tempArray[four] = playerFour[four];
+		}
+		break;
+	case 4:
+		for (int five = 0; five < POINTS; five++)
+		{
+			tempArray[five] = playerFive[five];
+		}
+		break;
+	case 5:
+		for (int six = 0; six < POINTS; six++)
+		{
+			tempArray[six] = playerSix[six];
+		}
+		break;
+	case 6:
+		for (int seven = 0; seven < POINTS; seven++)
+		{
+			tempArray[seven] = playerSeven[seven];
+		}
+		break;
+	case 7:
+		for (int eight = 0; eight < POINTS; eight++)
+		{
+			tempArray[eight] = playerEight[eight];
+		}
+		break;
+	case 8:
+		for (int nine = 0; nine < POINTS; nine++)
+		{
+			tempArray[nine] = playerNine[nine];
+		}
+		break;
+	case 9:
+		for (int ten = 0; ten < POINTS; ten++)
+		{
+			tempArray[ten] = playerTen[ten];
+		}
+		break;
+	default:
+		break;
+	}
+
+	cout << "Please select from an option below.\r\n";
+
+	//Determine what dice have been rolled and what the possible scoring options are. Display each score option to the screen along with the possible points. If a scoring option has been used in the past, 
+	//"USED" will appear in that scores points place on screen. The COUNT array counts the number of each type of dice 1-5. The SCORE array keeps track of the dice score (dice number * number of that dice rolled)
+	//for each dice. It also keeps index 6 - 7 for 3 and 4 of a kind. The OPTION array keeps track of what the player's score would be if that dice option were to be chosen
+	int COUNT[6];
+	int SIDE[6];
+	int OPTION[POINTS];
+	int SCORE[8];
+
+	for (int m = 0; m < POINTS; m++)
+	{
+		OPTION[m] = 0;
+		if (m < 6)
+		{
+			SIDE[m] = 0;
+			COUNT[m] = 0;
+		}
+		if (m < 8)
+		{
+			SCORE[m] = 0;
+		}
+	}
+
+
+	//For loop for upper section of scorecard (combinations of ones - sixes) 
+	for (int e = 0; e < 6; e++)
+	{
+		int * point = find(dice, dice + 5, (e+1));
+		if (point != dice + 5)
+		{
+			for (int f = 0; f < DICE; f++)
+			{
+				if (dice[f] == (e+1))
+				{
+					SIDE[e]+= 1;
+					if (f < DICE)
+					{
+						COUNT[e] += 1;
+					}
+				}
+			}
+
+			SCORE[e] = 0;
+			SCORE[e] = (e+1) * SIDE[e];
+			if (tempArray[e] == -1)
+			{
+				cout << e + 1 << ". Take the sum of " << e +1 << "s. POINTS: " << SCORE[e] << "\r\n";
+				OPTION[e] = SCORE[e];
+
+			}
+			else if (tempArray[e] > -1)
+			{
+				cout << e + 1 << ". Take the sum of " << e + 1 << "s. POINTS: <USED - " << tempArray[e] << ">\r\n";
+				OPTION[e] = 99;
+			}
+		}
+		else
+		{
+			if (tempArray[e] > -1)
+			{
+				cout << e + 1 << ". Take the sum of " << e + 1 << "s. POINTS: <USED - " << tempArray[e] << ">\r\n";
+				OPTION[e] = 99;
+			}
+			else
+			{
+				cout << e + 1 << ". Take the sum of " << e + 1 << "s. POINTS: 0\r\n";
+				OPTION[e] = 0;
+			}
+		}
+	}
+
+	//Booleans to determine if three or four of a kind is attained. For loops to look for three and four of  kind and display the appropriate score options. 
+	bool threeKind = false;
+	bool fourKind = false;
+	for (int g = 0; g < DICE; g++)
+	{
+		if (COUNT[g] == 3 && tempArray[6] == -1)
+		{
+			SCORE[6] = (g +1) * 3;
+			cout << "7. Take 3 of a kind with 3 " << COUNT[g] << "s. POINTS: " << SCORE[6] << "\r\n";
+			OPTION[6] = SCORE[6];
+			threeKind = true;
+		}
+		else if (tempArray[6] > -1)
+		{
+			cout << "7. Take 3 of a kind with 3 " << COUNT[g] << "s. POINTS: <USED - " << tempArray[6] << ">\r\n";
+			OPTION[6] = 99;
+			threeKind = true;
+		}
+	}
+	if (threeKind == false)
+	{
+		if (tempArray[6] > -1)
+		{
+			cout << "7. Take 3 of a kind. POINTS: <USED - " << tempArray[6] << ">\r\n";
+			OPTION[6] = 99;
+		}
+		else
+		{
+			cout << "7. Take 3 of a kind without a combination of 3 dice. POINTS: 0\r\n";
+			OPTION[6] = 0;
+		}
+	}
+	for (int h = 0; h < DICE; h++)
+	{
+		if (COUNT[h] == 4 && tempArray[7] == -1)
+		{
+			SCORE[7] = (h + 1) * 4;
+			cout << "8. Take 4 of a kind with 4 " << COUNT[h] << "s. POINTS: " << SCORE[7] << "\r\n";
+			OPTION[7] = SCORE[7];
+			fourKind = true;
+		}
+		else if (tempArray[7] > -1)
+		{
+			cout << "8. Take 4 of a kind with 4 " << COUNT[h] << "s. POINTS: <USED - " << tempArray[7] << ">\r\n";
+			OPTION[7] = 99;
+			fourKind = true;
+		}
+	}
+	if (fourKind == false)
+	{
+		if (tempArray[7] > -1)
+		{
+			cout << "8. Take 4 of a kind. POINTS: <USED - " << tempArray[7] << ">\r\n";
+			OPTION[7] = 99;
+		}
+		else
+		{
+			cout << "8. Take 4 of a kind without a combination of 4 dice. POINTS: 0\r\n";
+			OPTION[7] = 0;
+		}
+	}
+
+	//Determine if a full house has been acheived. Display the appropriate output to the screen. 
+	int * threePoint = find(COUNT, COUNT + 5, 3);
+	int * twoPoint = find(COUNT, COUNT + 5, 2);
+	if (threePoint != COUNT+5 && twoPoint != COUNT + 5 && tempArray[8] == -1)
+	{
+		cout << "9. Take the Full House with three " << threePoint + 1 << "s and two " << twoPoint + 1 << "s. POINTS: 25\r\n";
+		OPTION[8] = 25;
+	}
+	else if (tempArray[8] > -1)
+	{
+		cout << "9. Take the Full House with three " << threePoint + 1 << "s and two " << twoPoint + 1 << "s. POINTS: <USED - 25>\r\n";
+		OPTION[8] = 99;
+	}
+	else
+	{
+		cout << "9. Take the Full House without a Full House dice combination. POINTS: 0\r\n";
+		OPTION[8] = 0;
+	}
+	//Determine if a small straight has been acheived and display the appropriate options. 
+	if (COUNT[0] == 1 && COUNT[1] == 1 && COUNT[2] == 1 && COUNT[3] == 1 && tempArray[9] == -1)
+	{
+		cout << "10. Take the Small Straight with 1, 2, 3, and 4. POINTS: 30\r\n";
+		OPTION[9] = 30;
+	}
+	else if (COUNT[4] == 1 && COUNT[1] == 1 && COUNT[2] == 1 && COUNT[3] == 1 && tempArray[9] == -1)
+	{
+		cout << "10. Take the Small Straight with 2, 3, 4, and 5. POINTS: 30\r\n";
+		OPTION[9] = 30;
+	}
+	else if (tempArray[9] > -1)
+	{
+		cout << "10. Take the Small Straight. POINTS: <USED - 30>\r\n";
+		OPTION[9] = 99;
+	}
+	else
+	{
+		cout << "10. Take the Small Straight without a small straight dice combination. POINTS: 0\r\n";
+		OPTION[9] = 0;
+	}
+	if (COUNT[0] == 1 && COUNT[1] == 1 && COUNT[2] == 1 && COUNT[3] == 1 && COUNT[4] == 1 && tempArray[10] == -1)
+	{
+		cout << "11. Take the Large Straight with 1, 2, 3, 4, and 5. POINTS: 40\r\n";
+		OPTION[10] = 40;
+	}
+	else if (tempArray[10] > -1)
+	{
+		cout << "11. Take the Large Straight. POINTS: <USED - 40>\r\n";
+		OPTION[10] = 99;
+	}
+	else
+	{
+		cout << "11. Take the Large Straight without a large straight dice combination. POINTS: 0\r\n";
+		OPTION[10] = 0;
+	}
+	//Determine if a YAHTZEE has been acheived and display the appropriate options. 
+	bool yahtzee = false;
+	for (int j = 0; j < DICE; j++)
+	{
+		if (COUNT[j] == 5 && tempArray[11] == -1)
+		{
+			cout << "12. Take the Yahtzee with 5" << COUNT[j] << "s. POINTS: 50\r\n";
+			OPTION[11] = 50;
+			yahtzee = true;
+		}
+		else if (tempArray[11] > -1)
+		{
+			cout << "12. Take the Yahtzee wih 5 " << COUNT[j] << "s. POINTS: <USED - " << tempArray[11] << ">\r\n";
+			OPTION[11] = 99;
+			yahtzee = true;
+			//Automatically add a 100 point bonus to the playerScore for obtaining a second yahtzee if the tempArray for this player has a score > 0
+			if (tempArray[11] > 0)
+			{
+				playerScore[playerNplay] = 100 + playerScore[playerNplay];
+			}
+		}
+	}
+	if (yahtzee == false)
+	{
+		if (tempArray[11] > -1)
+		{
+			cout << "12. Take the Yahtzee. POINTS: <USED - " << tempArray[11] << ">\r\n";
+			OPTION[11] = 99;
+			//Automatically add a 100 point bonus to the playerScore for obtaining a second yahtzee if the tempArray for this player has a score > 0
+			if (tempArray[11] > 0)
+			{
+				playerScore[playerNplay] = 100 + playerScore[playerNplay];
+			}
+		}
+		else
+		{
+			cout << "12. Take Yahtzee without a combination of 5 dice. POINTS: 0\r\n";
+			OPTION[11] = 0;
+		}
+
+	}
+	//Allow the player to take Chance. 
+	if (tempArray[12] == -1)
+	{
+		int l = dice[0] + dice[1] + dice[2] + dice[3] + dice[4];
+		cout << "13. Take chance, the sum of your dice. POINTS: " << l << "\r\n";
+		OPTION[12] = l;
+	}
+	else if (tempArray[12] > -1)
+	{
+		cout << "13. Take chance, the sum of your dice. POINTS: <USED - " << tempArray[12] << ">\r\n";
+		OPTION[12] = 99;
+	}
+
+	//Declare choice and obtain the user's score choice in this variable. Use a do while loop to check for an input number. Loop will prompt for another choice if the user has previously scored points in the listed area. (OPTION[] =99 for the choice.) 
+	int choice = 0;
+	do
+	{
+		cin >> choice;
+		choice = choice - 1;
+		if (choice < 0 || choice > 12)
+		{
+			cout << "\n!!Invalid Entry - You must choose a number between 1 and 14!! \r\n";
+		}
+		else if (OPTION[choice] == 99)
+		{
+			cout << "\nYou've taken a score in this category before. Please select a new score.\r\n";
+		}
+	} while (choice < 0 || choice > 12 || OPTION[choice] == 99);
+
+	//Use a case structure to determine which score was chosen. Add the chosen score to the current player's playerScore array slot. Mark the option as taken in tempArray. 
+	switch (choice)
+	{
+	case 0:
+		playerScore[playerNplay] = OPTION[0] + playerScore[playerNplay];
+		tempArray[0] = OPTION[0];
+		break;
+	case 1:
+		playerScore[playerNplay] = OPTION[1] + playerScore[playerNplay];
+		tempArray[1] = OPTION[1];
+		break;
+	case 2:
+		playerScore[playerNplay] = OPTION[2] + playerScore[playerNplay];
+		tempArray[2] = OPTION[2];
+		break;
+	case 3:
+		playerScore[playerNplay] = OPTION[3] + playerScore[playerNplay];
+		tempArray[3] = OPTION[3];
+		break;
+	case 4:
+		playerScore[playerNplay] = OPTION[4] + playerScore[playerNplay];
+		tempArray[4] = OPTION[4];
+		break;
+	case 5:
+		playerScore[playerNplay] = OPTION[5] + playerScore[playerNplay];
+		tempArray[5] = OPTION[5];
+		break;
+	case 6:
+		playerScore[playerNplay] = OPTION[6] + playerScore[playerNplay];
+		tempArray[6] = OPTION[6];
+		break;
+	case 7:
+		playerScore[playerNplay] = OPTION[7] + playerScore[playerNplay];
+		tempArray[7] = OPTION[7];
+		break;
+	case 8:
+		playerScore[playerNplay] = OPTION[8] + playerScore[playerNplay];
+		tempArray[8] = OPTION[8];
+		break;
+	case 9:
+		playerScore[playerNplay] = OPTION[9] + playerScore[playerNplay];
+		tempArray[9] = OPTION[9];
+		break;
+	case 10:
+		playerScore[playerNplay] = OPTION[10] + playerScore[playerNplay];
+		tempArray[10] = OPTION[10];
+		break;
+	case 11:
+		playerScore[playerNplay] = OPTION[11] + playerScore[playerNplay];
+		tempArray[11] = OPTION[11];
+		break;
+	case 12:
+		playerScore[playerNplay] = OPTION[12] + playerScore[playerNplay];
+		tempArray[12] = OPTION[12];
+		break;
+	default:
+		break;
+	}
+
+	//Let the active player know their turn has ended. Show the player their score. 
+	cout << "\nYour turn has ended. Player " << playerNplay + 1 << "s current score is: " << playerScore[playerNplay] << "\r\n";
+
+	//Use a case structure to update the active player's playerNumber array. 
+	switch (playerNplay)
+	{
+	case 0:
+		for (int one = 0; one < POINTS; one++)
+		{
+			playerOne[one] = tempArray[one];
+		}
+		break;
+	case 1:
+		for (int two = 0; two < POINTS; two++)
+		{
+			playerTwo[two] = tempArray[two];
+		}
+		break;
+	case 2:
+		for (int three = 0; three < POINTS; three++)
+		{
+			playerThree[three] = tempArray[three];
+		}
+		break;
+	case 3:
+		for (int four = 0; four < POINTS; four++)
+		{
+			playerFour[four] = tempArray[four];
+		}
+		break;
+	case 4:
+		for (int five = 0; five < POINTS; five++)
+		{
+			playerFive[five] = tempArray[five];
+		}
+		break;
+	case 5:
+		for (int six = 0; six < POINTS; six++)
+		{
+			playerSix[six] = tempArray[six];
+		}
+		break;
+	case 6:
+		for (int seven = 0; seven < POINTS; seven++)
+		{
+			playerSeven[seven] = tempArray[seven];
+		}
+		break;
+	case 7:
+		for (int eight = 0; eight < POINTS; eight++)
+		{
+			playerEight[eight] = tempArray[eight];
+		}
+		break;
+	case 8:
+		for (int nine = 0; nine < POINTS; nine++)
+		{
+			playerNine[nine] = tempArray[nine];
+		}
+		break;
+	case 9:
+		for (int ten = 0; ten < POINTS; ten++)
+		{
+			playerTen[ten] = tempArray[ten];
+		}
+		break;
+	default:
+		break;
+	}
+
+	return *dice;
+}
+
+int finalRank(string playerName[], int playerScore[], int numPlayers)
+{
+	string tempName = "";
+	int tempScore = 0;
+	//Sort all player scores so that the highest ranking player is listed first. 
+	for (int n = 0; n < MAX; n++)
+	{
+		for (int o = 0; o < MAX; o++)
+		{
+			if (playerScore[n]>playerScore[o])
+			{
+				tempScore = playerScore[o];
+				tempName = playerName[o];
+				playerScore[o] = playerScore[n];
+				playerName[o] = playerName[n];
+				playerScore[n] = tempScore;
+				playerName[n] = tempName;
+			}
+		}
+	}
+
+	//Display the winner of the game to the screen. Display each player's score highest to lowest.
+	cout << "\n -------- Final Results ---------- \r\n";
+	cout << "The winner of this Yahtzee game is: " << playerName[0] << "\r\n";
+	cout << "Congratulations " << playerName[0] << "! You have won the game with a final score of " << playerScore[0] << "!\r\n";
+
+	cout << "\nThe other player scores are:\r\n";
+	for (int p = 1; p < numPlayers; p++)
+	{
+		cout << p + 1 << ". " << playerName[p] << " - " << playerScore[p] << "\r\n";
+		system("pause");
+	}
+	return 0;
+}
