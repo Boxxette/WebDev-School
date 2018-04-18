@@ -1,0 +1,66 @@
+/*
+   Program: NewTGCSplash
+   Author: Mel Richards
+   Create Date: 11.27.2016
+   Updated: 12.10.2016
+   Purpose: This class creates the splash screen for TGC. It has been edited from it's original form to show the company name, address, description,
+   	    and the company's logo. Clicking the mouse will cause the splash screen to end and the application to allow you to enter options to calculate costs.
+
+*/
+
+import javax.swing.JOptionPane;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.*;
+
+public class NewTGCSplash extends Frame
+{
+	//Create the panels for the splash screen.
+	JPanel titlePanel = new JPanel();
+		JLabel coTitle = new JLabel("Travelor's Gasoline Calculator (TGC)");
+		JLabel coAddress = new JLabel("3790 36th St. S Fargo, ND 58104 ");
+	ImageIcon logo = new ImageIcon("TGCLogo.PNG");
+	Image logoImage = logo.getImage();
+	Image newLogo = logoImage.getScaledInstance(120,120, java.awt.Image.SCALE_SMOOTH);
+	ImageIcon smallLogo = new ImageIcon(newLogo);
+	JLabel logoLabel = new JLabel();
+	JPanel descriptionPanel = new JPanel();
+		JLabel coDescription = new JLabel("Tell us where you're going. We'll tell you how much it'll cost.");
+
+	public NewTGCSplash()
+	{
+		//Set layout for the splashscreen and panels
+		this.setLayout(new BorderLayout());
+			titlePanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+			descriptionPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+
+		//Create the titlePanel pieces and add them to the panel
+		titlePanel.add(coTitle);
+		titlePanel.add(coAddress);
+
+		//Create the logoPanel and add the logo.
+		logoLabel.setIcon(smallLogo);
+		logoLabel.setHorizontalAlignment(JLabel.CENTER);
+
+		//Create the descriptionPanel and add the description to it.
+		descriptionPanel.add(coDescription);
+
+		//Add all panels to the frame.
+		add(titlePanel, BorderLayout.NORTH);
+		add(logoLabel, BorderLayout.CENTER);
+		add(descriptionPanel, BorderLayout.SOUTH);
+
+		//override the windowClosing event
+		addWindowListener(
+			new WindowAdapter()
+				{
+				public void windowClosing(WindowEvent e)
+					{
+					   System.exit(0);
+					}
+				}
+
+		);
+	}
+}
